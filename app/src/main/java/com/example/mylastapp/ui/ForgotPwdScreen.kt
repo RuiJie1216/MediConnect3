@@ -80,7 +80,8 @@ fun ForgotPwdScreen(
 
         Button(
             onClick = onSendClick,
-            enabled = !isSending && icID.isNotBlank() && if (forWho == ForWho.Users) !icID.matches(Regex("\\d{12}")) else !icID.matches(Regex("\\d")),
+            enabled = !isSending && icID.isNotBlank() &&
+                    if (forWho == ForWho.Users) icID.matches(Regex("\\d{12}")) else icID.matches(Regex("\\d")),
             modifier = Modifier
                 .width(200.dp)
         ) {
