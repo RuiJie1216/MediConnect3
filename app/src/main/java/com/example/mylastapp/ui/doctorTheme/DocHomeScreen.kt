@@ -54,7 +54,10 @@ fun DocHomeScreen(
             Log.d("DocHomeScreen", "app: $app")
             val date = LocalDate.parse(app?.appointment?.date, dateFormatter)
             val time = LocalTime.parse(app?.appointment?.time, timeFormatter)
-            date == today && time.isAfter(currentTime)
+            date == today
+                    && time.isAfter(currentTime)
+                    && app?.appointment?.status
+                        .equals("Pending", ignoreCase = true)
         } catch (e: Exception) {
             false
         }
