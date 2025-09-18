@@ -69,33 +69,6 @@ fun UserHomeScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            Box(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .height(50.dp)
-                    .background(Color.White, RoundedCornerShape(25.dp))
-                    .border(1.dp, Color.Gray, RoundedCornerShape(25.dp))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Text(
-                        text = "Search...",
-                        color = Color.Gray,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
-            }
-
             Spacer(modifier = Modifier.height(25.dp))
 
             Row(
