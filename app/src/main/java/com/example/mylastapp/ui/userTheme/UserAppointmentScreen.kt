@@ -296,7 +296,7 @@ fun UserAppointmentScreen(
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.height(93.dp))
+                    Spacer(modifier = Modifier.height(60.dp))
 
                     if (totalDoctorPages > 1) {
                         PageBar(
