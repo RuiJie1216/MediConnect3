@@ -1,5 +1,6 @@
 package com.example.mylastapp.ui.userTheme
 
+import android.R.attr.onClick
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -25,9 +26,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.filled.Accessibility
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Bloodtype
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ChildCare
@@ -53,6 +56,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -73,6 +77,8 @@ import com.example.mylastapp.AppScreen
 import com.example.mylastapp.R
 import com.example.mylastapp.ui.rooms.entity.Doctors
 import com.example.mylastapp.ui.theme.MyLastAppTheme
+import com.google.common.math.LinearTransformation.vertical
+import kotlin.math.roundToInt
 
 
 data class Specialty(
@@ -114,6 +120,27 @@ fun UserAppointmentScreen(
     onHomeClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
+    var currentDoctorPage by remember { mutableStateOf(1) }
+    val itemsPerPage = 2
+
+    //change specialty or search, return to page 1
+    LaunchedEffect(filteredDoctors) {
+        currentDoctorPage = 1
+    }
+
+    val totalDoctorPages = (filteredDoctors.size + itemsPerPage - 1) / itemsPerPage
+    val currentDoctorItems = if(filteredDoctors.isEmpty()){
+        emptyList()
+    } else {
+        val safePage = when {
+            totalDoctorPages <= 0 -> 1
+            currentDoctorPage > totalDoctorPages -> totalDoctorPages
+            currentDoctorPage < 1 -> 1
+            else -> currentDoctorPage
+    }
+        filteredDoctors.drop((safePage - 1) * itemsPerPage).take(itemsPerPage)
+    }
+
     Box(
         modifier = modifier
     ) {
@@ -137,10 +164,13 @@ fun UserAppointmentScreen(
                         if (currentViewState == ViewState.DOCTORS) {
                             onChangeQuery("")
                             onChangeViewState(ViewState.SPECIALTIES)
+                            currentDoctorPage = 1
                         }
-                              },
+                    },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (currentViewState == ViewState.SPECIALTIES) Color(0xFF00C8B3) else Color.White
+                        containerColor = if (currentViewState == ViewState.SPECIALTIES) Color(
+                            0xFF00C8B3
+                        ) else Color.White
                     )
                 ) {
                     Text(
@@ -159,8 +189,9 @@ fun UserAppointmentScreen(
                         if (currentViewState == ViewState.SPECIALTIES) {
                             onChangeQuery("")
                             onChangeViewState(ViewState.DOCTORS)
+                            currentDoctorPage = 1
                         }
-                              },
+                    },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (currentViewState == ViewState.DOCTORS) Color(0xFF00C8B3) else Color.White
                     )
@@ -186,7 +217,13 @@ fun UserAppointmentScreen(
                             "Search by doctor name, specialty or languages"
                     )
                 },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = Color(0xFF00C8B3)) },
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = null,
+                        tint = Color(0xFF00C8B3)
+                    )
+                },
                 trailingIcon = {
                     if (query.isNotBlank()) {
                         IconButton(onClick = { onChangeQuery("") }) {
@@ -223,9 +260,12 @@ fun UserAppointmentScreen(
                         .padding(bottom = 100.dp, start = 16.dp, end = 16.dp)
                 ) {
                     items(filteredSpecialties) { specialty ->
-                        SpecialtyCard(specialty = specialty, onClick = { onSpecialtyCardClick(specialty) })
+                        SpecialtyCard(
+                            specialty = specialty,
+                            onClick = { onSpecialtyCardClick(specialty) })
                     }
                 }
+
             } else {
                 if (query.isNotBlank()) {
                     Text(
@@ -242,23 +282,36 @@ fun UserAppointmentScreen(
                         color = Color.Black
                     )
                 }
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+
+                Column(
                     modifier = Modifier
                         .weight(1f)
+                        .verticalScroll(rememberScrollState())
                         .padding(bottom = 100.dp, start = 16.dp, end = 16.dp)
                 ) {
-                    items(filteredDoctors) { doctor ->
+                    currentDoctorItems.forEach { doctor ->
                         DoctorCard(
                             doctor = doctor,
-                            onClick = { onDoctorCardClick(doctor) }
+                            onClick = { onDoctorCardClick(doctor) },
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(93.dp))
+
+                    if (totalDoctorPages > 1) {
+                        PageBar(
+                            currentPage = currentDoctorPage,
+                            totalPages = totalDoctorPages,
+                            onPageChange = { newPage -> currentDoctorPage = newPage },
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
                         )
                     }
                 }
             }
         }
 
-        // ===== 底部选择栏固定 =====
+        // ===== constant bar bottom =====
         UserChooseBar(
             chooseBar = currentScreen,
             onTurnClick = {
@@ -274,6 +327,54 @@ fun UserAppointmentScreen(
     }
 }
 
+@Composable
+fun PageBar(
+    currentPage: Int,
+    totalPages: Int,
+    onPageChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp,horizontal = 10.dp)
+    ) {
+        IconButton(
+            onClick = { if (currentPage > 1) onPageChange(currentPage - 1) },
+            enabled = currentPage > 1,
+            modifier = Modifier.size(32.dp)
+        ) {
+            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Previous")
+        }
+
+        for (i in 1..totalPages) {
+            Button(
+                onClick = { onPageChange(i) },
+                modifier = Modifier
+                    .size(36.dp)
+                    .padding(horizontal = 2.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (i == currentPage) Color(0xFF00C8B3) else Color.White
+                ),
+                contentPadding = PaddingValues(0.dp)
+            ) {
+                Text(
+                    text = i.toString(),
+                    color = if (i == currentPage) Color.White else Color.Black
+                )
+            }
+        }
+
+        IconButton(
+            onClick = { if (currentPage < totalPages) onPageChange(currentPage + 1) },
+            enabled = currentPage < totalPages
+        ) {
+            Icon(Icons.Default.ArrowForward, contentDescription = "Next")
+        }
+    }
+}
 
 @Composable
 fun SpecialtyCard(
@@ -321,11 +422,13 @@ fun SpecialtyCard(
 @Composable
 fun DoctorCard(
     doctor: Doctors,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
@@ -379,8 +482,11 @@ fun DoctorCard(
 
                     Spacer(Modifier.height(4.dp))
 
+                    val rating = doctor?.rating ?: 0.0
+                    val star = "⭐".repeat(rating.roundToInt())
+
                     Text(
-                        "Rating: ${doctor.rating}/5.0",
+                        "Rating: $star ${doctor.rating}/5.0",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = Color(0xFF666666),
                             fontSize = 14.sp
@@ -432,9 +538,40 @@ fun UsApPreview() {
             modifier = Modifier
                 .fillMaxSize(),
             filteredSpecialties = specialties,
-            filteredDoctors = emptyList(),
+            filteredDoctors = listOf(
+                Doctors(
+                    name = "Dr. John Doe",
+                    degree = "MBBS, MD",
+                    specialty = "Surgery",
+                    year = 10,
+                    language = "English, Spanish",
+                    quote = "",
+                    dayOff = "Monday",
+                    rating = 4.5,
+                ),
+                Doctors(
+                    name = "Dr. Jane Smith",
+                    degree = "MD, PhD",
+                    specialty = "Neurology",
+                    year = 15,
+                    language = "English, Mandarin",
+                    quote = "",
+                    dayOff = "Tuesday",
+                    rating = 4.8,
+                ),
+                Doctors(
+                    name = "Dr. Robert Brown",
+                    degree = "MBBS",
+                    specialty = "Radiology",
+                    year = 8,
+                    language = "English, French",
+                    quote = "",
+                    dayOff = "Wednesday",
+                    rating = 4.3,
+                ),
+            ),
             onSpecialtyCardClick = {},
-            currentViewState = ViewState.SPECIALTIES,
+            currentViewState = ViewState.DOCTORS,
             onChangeViewState = {},
             query = "",
             onChangeQuery = {},

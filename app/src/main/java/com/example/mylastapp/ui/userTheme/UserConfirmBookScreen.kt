@@ -90,7 +90,7 @@ fun UserConfirmBookScreen(
                 )
 
                 val rating = doctor?.rating ?: 0.0
-                val star = "★".repeat(rating.roundToInt())
+                val star = "⭐".repeat(rating.roundToInt())
 
                 Text(
                     "${doctor?.specialty} $star ${doctor?.rating}",
