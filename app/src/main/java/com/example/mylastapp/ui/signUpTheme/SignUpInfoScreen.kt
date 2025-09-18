@@ -16,6 +16,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -158,11 +159,6 @@ fun SignUpInfoScreen(
                     .height(10.dp)
             )
 
-            Text(
-                text = "I have read and agree to the Terms & Conditions",
-                color = if (isSystemInDarkTheme()) Color.LightGray else Color.Gray
-            )
-
             EditRead(
                 read = read,
                 onChangeRead = onChangeRead
@@ -244,13 +240,14 @@ fun EditRead(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        RadioButton(
-            selected = read,
-            onClick = { onChangeRead(true) }
+        Checkbox(
+            checked = read,
+            onCheckedChange = { checked -> onChangeRead(checked) }
         )
         Text(
-            text = "Yes",
-            color = if (isSystemInDarkTheme()) Color.White else Color.Black
+            text = "I have read and agree to the Terms & Conditions",
+            fontSize = 13.sp,
+            color = if (isSystemInDarkTheme()) Color.LightGray else Color.Gray
         )
     }
 }
